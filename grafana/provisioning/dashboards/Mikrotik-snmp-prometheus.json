@@ -79,7 +79,7 @@
     ]
   },
   "description": "Mikrotik snmp monitoring (prometheus)",
-  "editable": false,
+  "editable": true,
   "fiscalYearStartMonth": 0,
   "gnetId": 14420,
   "graphTooltip": 1,

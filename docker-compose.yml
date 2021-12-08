@@ -25,13 +25,13 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
-      #- /cgroup:/cgroup:ro #doesn't work on MacOS only for Linux
+      - /cgroup:/cgroup:ro #doesn't work on MacOS only for Linux
     restart: unless-stopped
     expose:
       - 8080
     labels:
       org.label-schema.group: "monitoring"
-
+  
   prometheus:
     image: prom/prometheus
     user: ${CURRENT_USER}
@@ -45,6 +45,28 @@ services:
     ports:
       - "9090:9090"
 
+  node-exporter:
+    image: 'prom/node-exporter:latest'
+    container_name: mk_node_exporter
+    user: root
+    privileged: true
+    volumes:
+      - '/proc:/host/proc:ro'
+      - '/sys:/host/sys:ro'
+      - '/:/rootfs:ro'
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: always
+#    networks:
+#      testlab:
+#        ipv4_address: 10.0.0.20
+    expose:
+      - 9100
+    ports:
+      - '9100:9100'
+
   snmp_exporter:
     image: mashinkopochinko/snmp_exporter_mikrotik
     container_name: mk_snmp_exporter
@@ -55,13 +77,13 @@ services:
       - prometheus
 
   mktxp:
+    restart: on-failure
     image: guenterbailey/mktxp:latest
     container_name: mk_txp_exporter
-    restart: always
     volumes:
-      - /home/dietpi/home-network-monitoring/server/mktxp:/root/mktxp:rw
+      - /home/dietpi/home-network-monitoring/mktxp:/root/mktxp:rw
     ports:
-      - "49090:49090"
+      - "192.168.88.2:49090:49090"
     depends_on:
       - prometheus
 
@@ -70,8 +92,8 @@ services:
     container_name: mk_pihole_exporter
     restart: always
     environment:
-      - PIHOLE_HOSTNAME=0.0.0.0
-      - PIHOLE_PASSWORD=XXXXXXX
+      - PIHOLE_HOSTNAME=192.168.88.2
+      - PIHOLE_PASSWORD=!#Destiny/1989#!
       - INTERVAL=5s
       - PORT=9617
     ports:
